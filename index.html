@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>무재해 상황판 대시보드</title>
+  <style>
+    :root{
+      --bg:#05233a;
+      --accent:#ffc857;
+      --card:#0b3b57;
+      --muted:#9fb3c8;
+      --glass: rgba(255,255,255,0.04);
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#023047);color:white}
+    .wrap{min-height:5vh;display:flex;align-items:center;justify-content:center;padding:32px}
+    .board{width:1100px;max-width:96%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));border-radius:20px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.04)}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .title{display:flex;gap:12px;align-items:center}
+    .logo{width:86px;height:86px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#072227;font-weight:700;font-size:30px}
+    .title h1{margin:0;font-size:50px}
+    .subtitle{color:var(--muted);font-size:14px}
+    .content{display:flex;gap:22px;align-items:stretch}
+    .big-card{flex:2;background:linear-gradient(180deg,var(--card),rgba(0,0,0,0.18));padding:24px;border-radius:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:260px}
+    .big-number{font-size:96px;font-weight:800;color:var(--accent);margin:6px 0}
+    .big-label{font-size:18px;color:var(--muted)}
+    .side{flex:1;display:flex;flex-direction:column;gap:18px}
+    .info-card{background:var(--glass);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .info-row:last-child{margin-bottom:0}
+    .info-title{color:var(--muted);font-size:13px}
+    .info-value{font-size:20px;font-weight:700}
+    .dates{display:flex;gap:8px;align-items:center}
+    .date-pill{background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:10px;font-weight:600}
+    @media(max-width:880px){.content{flex-direction:column}.big-number{font-size:72px}}
+    .settings{position:fixed;right:18px;bottom:18px;background:#ffffff09;border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,0.04)}
+    .settings input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px;border-radius:6px;color:white}
+    .muted-small{color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="board">
+      <div class="header">
+        <div class="title">
+          <div class="logo">iH</div>
+          <div>
+            <h1>무재해 상황판</h1>
+            <div class="subtitle">무사고·무재해 모두의 관심에서 시작됩니다.</div>
+          </div>
+        </div>
+        <div class="dates">
+          <div class="date-pill" id="todayDisplay">오늘: --</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="big-card">
+          <div class="big-label">무재해 연속 일수</div>
+          <div class="big-number" id="daysCount">0</div>
+        </div>
+        <div class="side">
+          <div class="info-card">
+            <div class="info-row"><div class="info-title">마지막 재해 일자</div><div class="info-value" id="lastDate">-</div></div>
+            <div class="info-row"><div class="info-title">무재해 목표(일)</div><div class="info-value" id="goalDays">1000</div></div>
+            <div class="info-row"><div class="info-title">목표까지 남은 일수</div><div class="info-value" id="daysLeft">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="settings">
+    <div class="muted-small">관리자 설정</div>
+    <div style="display:flex;gap:6px;margin-top:8px;">
+      <input type="date" id="inputLast" />
+      <button id="applyBtn" style="padding:6px 10px;border-radius:6px;">적용</button>
+    </div>
+  </div>
+  <script>
+    let lastIncidentDate = '2024-04-17';
+    const goalDays = 1000;
+
+    const daysCountEl = document.getElementById('daysCount');
+    const lastDateEl = document.getElementById('lastDate');
+    const daysLeftEl = document.getElementById('daysLeft');
+    const todayDisplay = document.getElementById('todayDisplay');
+    const inputLast = document.getElementById('inputLast');
+    const applyBtn = document.getElementById('applyBtn');
+
+    function formatDate(d){ return d.toLocaleDateString('ko-KR'); }
+
+    function compute(){
+      const now = new Date();
+      const last = new Date(lastIncidentDate + 'T00:00:00');
+      const msPerDay = 24*60*60*1000;
+      const diff = Math.floor((now - last)/msPerDay);
+      const days = diff >= 0 ? diff : 0;
+      const left = goalDays - days;
+      daysCountEl.textContent = days;
+      lastDateEl.textContent = lastIncidentDate;
+      daysLeftEl.textContent = left >= 0 ? left : 0;
+      todayDisplay.textContent = '오늘: ' + formatDate(now);
+    }
+
+    applyBtn.addEventListener('click', ()=>{
+      const ld = inputLast.value;
+      if(ld) lastIncidentDate = ld;
+      compute();
+    });
+
+    inputLast.value = lastIncidentDate;
+    compute();
+    setInterval(compute, 1000*60*60);
+  </script>
+</body>
+</html>
